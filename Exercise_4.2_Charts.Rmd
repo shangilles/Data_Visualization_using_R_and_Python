@@ -1,0 +1,103 @@
+
+# Load the data into a data frame
+```{r}
+#install.packages("readr")
+library(readr)
+
+# TV Sizes
+tv_df <- read_tsv("ex4-2/tv_sizes.txt")
+head(tv_df)
+
+# Crime Rates By State
+crime_df <- read_csv("ex4-2/crimerates-by-state-2005.csv")
+head(crime_df)
+
+```
+
+# Filter Data
+```{r}
+# Load Packages
+library(dplyr)
+
+# Crime Data
+# Remove United States consolidated record
+# Remove DC outlier.  Keep states only
+ crime_filt <- crime_df %>% filter(state != "United States" & state != "District of Columbia")
+ head(crime_filt)
+ 
+# TV Data
+# Remove outlier
+ tv_filt <- tv_df %>% filter(size < 300)
+ head(tv_filt)
+
+```
+
+# Scatterplot
+```{r message=FALSE}
+# Load Packages
+library(ggplot2)
+
+#Scatterplot
+ggplot(crime_filt, aes(x=aggravated_assault, y=burglary)) +
+    geom_point(color="blue", size=3) +
+    geom_smooth(method="lm") +
+    labs(x="Aggravated Assault Rate", y="Burglary Rate", title="Aggravated Assault By Burglary") +
+#    geom_smooth(method="lm") +
+
+  # Remove background and grid
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), axis.line = element_blank())
+
+```
+
+# Bubble Chart
+```{r}
+# Load Packages
+library(plotly)
+
+# Using Area to size bubble
+# Ensure to set size of bubble to area instead of diameter
+fig <- plot_ly(crime_filt, x= ~aggravated_assault, y= ~burglary, text = ~state, type = 'scatter', mode = 'markers',
+        marker = list(size = ~population/50000, sizemode = "area", opacity = 0.5))
+
+# Add titles & stacks
+fig <- fig %>% layout(title = 'Aggravated Assault and Burglary Rates By Population',
+                      xaxis = list(title = "Aggravated Assault Rate", showgrid = FALSE),
+                      yaxis = list(title = "Burglary Rate", showgrid = FALSE))
+
+
+fig
+```
+
+# Density Plot
+```{r}
+# Load Packages
+library(ggplot2)
+
+# Histogram
+ggplot(tv_filt, aes(as.factor(x=size))) +
+    geom_bar(fill="dark green") +
+    labs(x="TV Size", y="Count", title="Records By TV Size") +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+# Density Plot
+ggplot(tv_filt, aes(x=size)) +
+    geom_density(color="dark green", size=1.5) +
+    labs(x="TV Size", y="Probability Density", title="Records By TV Size") +
+
+  # Remove background and grid
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), axis.line = element_blank())
+
+```
+
+# Export Density Data
+```{r}
+
+tvsize <- tv_filt$size
+dtv <- density(tvsize)
+
+dtvframe <- data.frame(dtv$x, dtv$y)
+write.table(dtvframe, "tvdensity.txt", sep="\t")
+
+```
